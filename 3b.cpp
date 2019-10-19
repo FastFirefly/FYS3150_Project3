@@ -2,40 +2,19 @@
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
-#include <algorithm>
-#include <string>   
-#include <sstream>
 #include <fstream>
 #include <iomanip>
 #include <omp.h>
-#include <random>
+#include "time.h"
 
 
 #define EPS 3.0e-14
 #define MAXIT 10
 #define   ZERO       1.0E-8
-#define NUM_THREADS 8
-
 
 using namespace std;
-//THE INTEGRAND FUNCTION IN CARTESIAN COORDINATES
-double func_cart(double x1, double y1, double z1, double x2, double y2, double z2){
-	if  ((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2) != 0)
-		return exp(-4*(sqrt(x1*x1+y1*y1+z1*z1)+sqrt(x2*x2+y2*y2+z2*z2))) 
-		          / sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2)+(z1-z2)*(z1-z2));
-	else 
-		return 0;
-}
 
-//THE INTEGRAND FUNCTION IN POLAR COORDINATES
-double func_polar(double r1, double t1, double p1, double r2, double t2, double p2){
-	double cosb = cos(t1)*cos(t2) + sin(t1)*sin(t2)*cos(p1-p2);
-	double f = exp(-4*(r1+r2))*r1*r1*r2*r2*sin(t1)*sin(t2)/sqrt(r1*r1+r2*r2-2*r1*r2*cosb);
-	if(r1*r1+r2*r2-2*r1*r2*cosb > ZERO)
-		return f;
-	else 
-		return 0;
-}
+double gammln(double);
 
 //THE INTEGRAND FUNCTION IN POLAR COORDINATES REDUCED FOR GAUSSIAN LAGUERRE
 double func_polar_lag(double r1, double t1, double p1, double r2, double t2, double p2){
@@ -47,26 +26,7 @@ double func_polar_lag(double r1, double t1, double p1, double r2, double t2, dou
 		return 0;
 }
 
-//THE INTEGRAND FUNCTION IN POLAR COORDINATES FOR THE IMPORTANCE SAMPLING MONTE CARLO
-double func_polar_mc(double r1, double t1, double p1, double r2, double t2, double p2){
-	double cosb = cos(t1)*cos(t2) + sin(t1)*sin(t2)*cos(p1-p2);
-	double f = r1*r1*r2*r2*sin(t1)*sin(t2)/sqrt(r1*r1+r2*r2-2*r1*r2*cosb);
-	if(r1*r1+r2*r2-2*r1*r2*cosb > ZERO)
-		return f;
-	else 
-		return 0;
-}
-
-       /*
-       ** The function 
-       **              gauleg()
-       ** takes the lower and upper limits of integration x1, x2, calculates
-       ** and return the abcissas in x[0,...,n - 1] and the weights in w[0,...,n - 1]
-       ** of length n of the Gauss--Legendre n--point quadrature formulae.
-       */
-
-void gauleg(double x1, double x2, double x[], double w[], int n)
-{
+void gauleg(double x1, double x2, double x[], double w[], int n) {
    int         m,j,i;
    double      z1,z,xm,xl,pp,p3,p2,p1;
    double      const  pi = 3.14159265359; 
@@ -128,40 +88,8 @@ void gauleg(double x1, double x2, double x[], double w[], int n)
 } // End_ function gauleg()
 
 
-double gauss_legendre(double a, double b, int N, double &integral) {
-    double *x = new double [N];
-    double *w = new double [N];
-    //  set up the mesh points and weights
-    gauleg(a,b,x,w, N);
-
-    //  evaluate the integral with the Gauss-Legendre method
-    //  Note that we initialize the sum
-    double int_gauss = 0;
-    //  six-double loops
-    for (int i=0;i<N;i++){
-	      for (int j = 0;j<N;j++){
-	          for (int k = 0;k<N;k++){
-    	          for (int l = 0;l<N;l++){
-        	          for (int m = 0;m<N;m++){
-        	              for (int s = 0;s<N;s++){
-                            int_gauss += w[i]*w[j]*w[k]*w[l]*w[m]*w[s]
-                            *func_cart(x[i],x[j],x[k],x[l],x[m],x[s]);
-                            //printf("%f\n", int_gauss);
-                     		}
-                    }
-                }
-            }
-        }
-	}
-	integral = int_gauss;
-    delete [] x;
-	delete [] w;
-	
-    return int_gauss;
-}
-
 //FUNCTIONS FOR COMPUTING THE LAGUERRE POLYNOMIALS WEIGHTS
-double gammln( double xx){
+double gammln( double xx) {
 	double x,y,tmp,ser;
 	static double cof[6]={76.18009172947146,-86.50532032941677,
 		24.01409824083091,-1.231739572450155,
@@ -175,7 +103,8 @@ double gammln( double xx){
 	for (j=0;j<=5;j++) ser += cof[j]/++y;
 	return -tmp+log(2.5066282746310005*ser/x);
 }
-void gaulag(double *x, double *w, int n, double alf){
+
+void gaulag(double *x, double *w, int n, double alf) {
 	int i,its,j;
 	double ai;
 	double p1,p2,p3,pp,z,z1;
@@ -209,21 +138,20 @@ void gaulag(double *x, double *w, int n, double alf){
 	}
 }
 
-void Gauss_Laguerre(int n_lag, int n_leg, double &integral){
+double Gauss_Laguerre(int n_lag, int n_leg) {
 	double *xlag = new double [n_lag + 1];
 	double *wlag = new double [n_lag + 1];
 	double *xt = new double [n_leg];
 	double *wt = new double [n_leg];
 	double *xp = new double [n_leg];
 	double *wp = new double [n_leg];
-
 	gaulag(xlag,wlag,n_lag,0.0);
 	gauleg(0,M_PI,xt,wt,n_leg);
 	gauleg(0,2*M_PI,xp,wp,n_leg);
 	double int_gauss = 0.0;
 
 	int i,j,k,l,f,t;
-	#pragma omp parallel for reduction(+:int_gauss)  private (i,j,k,l,f,t)
+	// #pragma omp parallel for reduction(+:int_gauss)  private (i,j,k,l,f,t)
 	for (i = 1;  i <= n_lag;  i++){    //r1
 		for (j = 0;  j <  n_leg;  j++){    //t1
 			for (k = 0;  k <  n_leg;  k++){    //p1
@@ -238,26 +166,44 @@ void Gauss_Laguerre(int n_lag, int n_leg, double &integral){
 			}
 		}
 	}
-	integral = int_gauss;
-
 	delete [] xt;
 	delete [] wt;
 	delete [] xp;
 	delete [] wp;
 	delete [] xlag;
 	delete [] wlag;
+	return int_gauss;
 }
 
 int main(int argc, char *argv[]) {
-    double a = atoi(argv[1]), b = atoi(argv[2]);
-    int N = atoi(argv[3]);
+    double a = -atoi(argv[1]), b = atoi(argv[1]);
+    int N = atoi(argv[2]);
 
+	clock_t start1, start2, finish1, finish2;  //  declare start and final time for each exponent to test the time of the algorithm
 
 	printf("EXACT RESULT:\t%.8f\t\n", 5*M_PI*M_PI/256);
 	double int_leg;
-	int n_lag = 15;
-	int n_leg = 15;
-	double int_lag;
-	Gauss_Laguerre(n_lag, n_leg, int_lag);
-	printf("Gau-Lag:     \t%.8f\t\n", int_lag);
+	int n_lag;
+	int n_leg;
+	double gau;
+	n_lag = 30;
+    n_leg = 30;
+    start1 = clock();
+    gau = Gauss_Laguerre(n_lag, n_leg);
+    finish1 = clock();
+    printf("Time for Gauss-Laguerre N=%d: %f     Result=%0.10f\n", n_lag, ((finish1 - start1)/(double) CLOCKS_PER_SEC ), gau);
+
+	
+    /*for (int i=5; i<=20; i+=5) {
+        n_lag = i;
+        n_leg = i;
+        start1 = clock();
+        gau = Gauss_Laguerre(n_lag, n_leg);
+        finish1 = clock();
+        printf("Time for Gauss-Laguerre N=%d: %f     Result=%0.10f\n", i, ((finish1 - start1)/(double) CLOCKS_PER_SEC ), gau);
+
+    }*/
 }
+
+#undef EPS
+#undef MAXIT

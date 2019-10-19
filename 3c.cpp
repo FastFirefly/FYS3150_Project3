@@ -31,16 +31,15 @@ double func_polar(double r1, double t1, double p1, double r2, double t2, double 
 }
 
 inline double ran(){
-	//return ((double) generator())/2147483647;
 	return ((double) rand()) / RAND_MAX;
 }
 
 //Monte Carlo with finite domain
-void Brute_MonteCarlo_Polar(int n, double a, double  &integral, double  &std){
+void Brute_MonteCarlo_Polar(int n, double a, double  &integral, double  &var, double  &std){
 	double * x = new double [n];
 	double r1, r2, t1, t2, p1, p2, f;
 	double mc = 0.0;
-	double sigma = 0.0;
+	double sig = 0.0;
 	double jacob = a*a*4*pow(M_PI,4);
 	int i;
 
@@ -57,27 +56,31 @@ void Brute_MonteCarlo_Polar(int n, double a, double  &integral, double  &std){
 		x[i] = f;
 	}
 	mc = mc/((double) n );
-	#pragma omp parallel for reduction(+:sigma)  private (i)
+	#pragma omp parallel for reduction(+:sig)  private (i)
 	for (i = 0; i < n; i++){
-		sigma += (x[i] - mc)*(x[i] - mc); 
+		sig += (x[i] - mc)*(x[i] - mc); 
 	}
-	sigma = sigma*jacob/((double) n );
-	std = sqrt(sigma)/sqrt(n);
+	var = sig*jacob/((double) n );
+	std = sqrt(sig)/sqrt(n);
 	integral = mc*jacob;
 	delete [] x;
 }
 
 int main(int argc, char *argv[]) {
-    double a = atoi(argv[1]), b = atoi(argv[2]);
-    int N = atoi(argv[3]);
-
     printf("EXACT RESULT:\t%.8f\t\n", 5*M_PI*M_PI/256);
 
-    int n_mc = 1000000;
+    int n_mc = atoi(argv[1]);
     srand(time(NULL));
 	generator.seed(time(NULL));
 
-	double brute_polar_mc, brute_polar_std;
-	Brute_MonteCarlo_Polar(n_mc, 4, brute_polar_mc, brute_polar_std);
-	printf("Brute force Polar Monte Carlo:   \t%.8f\t%.8f\n", brute_polar_mc, brute_polar_std);
+	double brute_polar_mc, brute_polar_var, brute_polar_std;
+	Brute_MonteCarlo_Polar(n_mc, 4, brute_polar_mc, brute_polar_var, brute_polar_std);
+	printf("%.16f		%.16f		%.16f\n", brute_polar_mc, brute_polar_var, brute_polar_std);	
+	//clock_t start1, start2, finish1, finish2;  //  declare start and final time for each exponent to test the time of the algorithm
+	/*for (int i=0; i<10; i++) {
+		//start1 = clock();
+		Brute_MonteCarlo_Polar(n_mc, 4, brute_polar_mc, brute_polar_var, brute_polar_std);
+		//finish1 = clock();
+		printf("%.16f		%.16f		%.16f\n", brute_polar_mc, brute_polar_var, brute_polar_std);	
+	}*/
 }
