@@ -1,20 +1,14 @@
+#include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <string>
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
-#include <algorithm>
-#include <string>   
-#include <sstream>
-#include <fstream>
-#include <iomanip>
+#include "time.h"
+#include "lib.h"
 #include <omp.h>
 #include <random>
-
-
-#define EPS 3.0e-14
-#define MAXIT 10
-#define   ZERO       1.0E-10
-
 using namespace std;
 
 // The integrand function in Cartesian Coordinates
@@ -69,16 +63,23 @@ int main(int argc, char *argv[]) {
     double a = -atoi(argv[1]), b = atoi(argv[1]);
     int n_mc = atoi(argv[2]);
     
+    // Unit test for func_cart 
+    if (func_cart(2, 3, 1, 2, 3, 1) != 0) {
+        printf("Unit test failed, func_cart did not return a 0 \n");
+        printf("Exiting program...\n");
+        exit(1);
+    }
+
     srand(time(NULL));		// Set seed for random number generation
 
-    printf("EXACT RESULT:\t%.8f\t\n", 5*M_PI*M_PI/256);
+    printf("Exact =\t%.8f\t\n", 5*M_PI*M_PI/256);
 
     double brute_mc, brute_var, brute_std;
 	clock_t start1, start2, finish1, finish2;  //  declare start and final time for each exponent to test the time of the algorithm
 	start1 = clock();
 	Brute_MonteCarlo(n_mc, a, b, brute_mc, brute_var, brute_std);
 	finish1 = clock();
-	printf("Time: %f 		 %.16f		%.16f\n", ((finish1 - start1)/(double) CLOCKS_PER_SEC ), brute_mc, brute_std);
+	printf("Brute Monte Carlo, Time: %f    Results: %.16f    Standard Deviation: %.16f\n", ((finish1 - start1)/(double) CLOCKS_PER_SEC ), brute_mc, brute_std);
 	//clock_t start1, start2, finish1, finish2;  //  declare start and final time for each exponent to test the time of the algorithm
 	/*for (int i=0; i<1000; i++) {
 		//start1 = clock();

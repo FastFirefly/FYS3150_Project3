@@ -1,13 +1,13 @@
+#include <fstream>
 #include <iostream>
+#include <iomanip>
+#include <string>
 #include <cmath>
 #include <stdio.h>
 #include <stdlib.h>
-#include <fstream>
-#include <iomanip>
-#include <omp.h>
 #include "time.h"
 #include "lib.h"
-
+#include <random>
 
 #define EPS 3.0e-14
 #define MAXIT 10
@@ -122,9 +122,16 @@ double Gauss_Laguerre(int n_lag, int n_leg) {
 int main(int argc, char *argv[]) {
     int N = atoi(argv[1]);
 
+    // Unit test for func_polar_lag
+    if (func_polar_lag(2, 3, 1, 2, 3, 1) != 0) {
+        printf("Unit test failed, func_polar_lag did not return a 0 \n");
+        printf("Exiting program...\n");
+        exit(1);
+    }
+
 	clock_t start1, start2, finish1, finish2;  //  declare start and final time for each exponent to test the time of the algorithm
 
-	printf("EXACT RESULT:\t%.8f\t\n", 5*M_PI*M_PI/256);
+	printf("Exact =\t%.8f\t\n", 5*M_PI*M_PI/256);
 	double int_leg;
 	int n_lag;
 	int n_leg;

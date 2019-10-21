@@ -83,16 +83,23 @@ void Importance_MonteCarlo_Polar(int n, double &integral, double &var, double &s
 int main(int argc, char *argv[]) {
     int n_mc = atoi(argv[1]);
 
+    // Unit test for func_polar_mc 
+    if (func_polar_mc(2, 3, 1, 2, 3, 1) != 0) {
+        printf("Unit test failed, func_polar_mc did not return a 0 \n");
+        printf("Exiting program...\n");
+        exit(1);
+    }
+
 	generator.seed(time(NULL));		// Set seed for random number generation
 
-	printf("EXACT RESULT:\t%.16f\t\n", 5*M_PI*M_PI/256);
+	printf("Exact =\t%.8f\t\n", 5*M_PI*M_PI/256);
 
 	double polar_imp_mc, polar_imp_var, polar_imp_std;
 	// Time measurements for OpenMP version
 	double start_time = omp_get_wtime();
 	Importance_MonteCarlo_Polar(n_mc, polar_imp_mc, polar_imp_var, polar_imp_std);
 	double time = omp_get_wtime() - start_time;
-	printf("Time: %f 		 %.16f		%.16f\n", time, polar_imp_mc, polar_imp_std);
+	printf("Importance Sampling Monte Carlo, Time: %f    Results: %.16f    Standard Deviation: %.16f\n", time, polar_imp_mc, polar_imp_std);
 
 	// Time measurements for serial version
 	/*clock_t start1, start2, finish1, finish2;  //  declare start and final time for each exponent to test the time of the algorithms

@@ -3,14 +3,11 @@
 #include <iomanip>
 #include <string>
 #include <cmath>
-#include <omp.h>
 #include <armadillo>
 #include <stdio.h>
 #include <stdlib.h>
 #include "time.h"
 #include "lib.h"
-
-#define   ZERO       1.0E-10
 
 using namespace std;
 using namespace arma;
@@ -60,7 +57,15 @@ int main(int argc, char *argv[]) {
     double a = -atoi(argv[1]), b = atoi(argv[1]);
     int N = atoi(argv[2]);
     double gau;
-    printf("Exact=\t%.8f\t\n", 5*M_PI*M_PI/256);
+
+    // Unit test for func_cart 
+    if (func_cart(2, 3, 1, 2, 3, 1) != 0) {
+        printf("Unit test failed, func_cart did not return a 0 \n");
+        printf("Exiting program...\n");
+        exit(1);
+    }
+
+    printf("Exact =\t%.8f\t\n", 5*M_PI*M_PI/256);
     clock_t start1, start2, finish1, finish2;   //  declare start and final time for each exponent to test the time of the algorithm
     start1 = clock();
     gau = gauss_legendre(a, b, N);
