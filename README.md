@@ -1,5 +1,7 @@
 # FYS3150_Project3
+Welcome to our FYS3150 Respository for project 3
 
+Here you will find the programs, results and report for Project 3 in FYS3150
 
 ## To compile and execute 3a, Gauss Legendre, use: 
 
