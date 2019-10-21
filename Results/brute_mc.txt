@@ -1,3 +1,4 @@
+Results from running the brute force monte carlo in 3c with parameters 3 and 10000000
 0.1929810580105492
 0.1770086059769551
 0.1965375130682798
